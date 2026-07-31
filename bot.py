@@ -4,7 +4,7 @@ import requests  # ← ДОБАВЛЕНО (для пинга)
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-BOT_TOKEN = "8931098246:AAHXCV0LS4QCSvHRdfI9qaQCDbfRrpdr43k"  # ПОСЛЕ /revoke ВСТАВЬ НОВЫЙ
+BOT_TOKEN = "8931098246:AAFHHHqMBF856L_03CCrlde6IGDpa6JzCpM"  # ПОСЛЕ /revoke ВСТАВЬ НОВЫЙ
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
