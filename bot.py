@@ -11,6 +11,9 @@ bot = telebot.TeleBot(BOT_TOKEN)
 # === ДАННЫЕ ===
 players = {}  # user_id -> {"game": str, "looking": bool, "username": str}
 
+# Защита от двойной отправки /start
+start_sent = {}  # user_id -> True/False
+
 # === КЛАВИАТУРЫ ===
 
 def main_menu():
