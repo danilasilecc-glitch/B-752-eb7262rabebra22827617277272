@@ -257,19 +257,49 @@ def clean_queue():
         print("🧹 Все поиски сброшены (авто)")
 threading.Thread(target=clean_queue, daemon=True).start()
 
-# === АВТО-ПИНГ (чтобы Render не усыплял) ===
+# ... весь твой код (выбор игр, поиск) ...
+
+# === ОЧИСТКА ===
+def clean_queue():
+    while True:
+        time.sleep(300)
+        for uid, p in players.items():
+            if p["looking"]:
+                p["looking"] = False
+        print("🧹 Очистка")
+threading.Thread(target=clean_queue, daemon=True).start()
+
+# === ПИНГ (КАЖДЫЕ 5 МИНУТ) ===
 def keep_alive():
     while True:
         try:
             requests.get("https://www.google.com", timeout=10)
-            requests.get("https://www.cloudflare.com", timeout=10)
-            print("✅ Пинг успешен (бот активен)")
+            print("✅ Пинг успешен")
         except Exception as e:
             print(f"❌ Ошибка пинга: {e}")
-        time.sleep(300)  # 5 минут
+        time.sleep(300)
 
 threading.Thread(target=keep_alive, daemon=True).start()
 
+# === ПРИНУДИТЕЛЬНЫЙ ПОРТ ДЛЯ RENDER (НОВЫЙ БЛОК) ===
+import os
+from threading import Thread
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+
+def run_health_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    server.serve_forever()
+
+Thread(target=run_health_server, daemon=True).start()
+print(f"✅ Health-сервер запущен на порту {os.environ.get('PORT', 10000)}")
+
 # === ЗАПУСК ===
-print("🚀 TEAMFINDER ЗАПУЩЕН (БЕЗ РЕЖИМОВ, С ВЫБОРОМ ИГР + АВТО-ПИНГ)")
+print("🚀 БОТ ЗАПУЩЕН С ПИНГОМ И ПОРТОМ")
 bot.infinity_polling()
