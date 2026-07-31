@@ -5,14 +5,15 @@ import telebot
 import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from threading import Thread  # ← ВАЖНО: ДОБАВЛЕН ПРАВИЛЬНЫЙ ИМПОРТ
 
-BOT_TOKEN = "8931098246:AAFHHHqMBF856L_03CCrlde6IGDpa6JzCpM"
+BOT_TOKEN = "8931098246:AAFHHHqMBF856L_03CCrlde6IGDpa6JzCpM"  # ЗАМЕНИ
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # === ДАННЫЕ ===
 players = {}
-start_sent = {}  # user_id -> timestamp (для защиты от двойной отправки)
+start_sent = {}
 
 # === КЛАВИАТУРЫ ===
 
@@ -46,17 +47,16 @@ def support_menu():
     kb.add(InlineKeyboardButton("🔙 Назад", callback_data="back"))
     return kb
 
-# === КОМАНДА /start с защитой ===
+# === КОМАНДЫ ===
 
 @bot.message_handler(commands=['start'])
 def start(msg):
     uid = msg.from_user.id
     username = msg.from_user.username or f"User{uid}"
     
-    # Защита от двойной отправки: если меню отправлено за последние 10 секунд — игнорируем
     current_time = time.time()
     if uid in start_sent and current_time - start_sent[uid] < 10:
-        return  # Молча игнорируем второе срабатывание
+        return
     start_sent[uid] = current_time
     
     if uid not in players:
@@ -66,9 +66,9 @@ def start(msg):
         uid,
         f"🎮 **Добро пожаловать в TeamFinder!**\n\n"
         f"Привет, {username}!\n\n"
-        f"1️⃣ Выбери игру\n"
+        f"1️⃣ Сначала выбери игру\n"
         f"2️⃣ Нажми «Искать тиммейта»\n"
-        f"3️⃣ Жди\n\n"
+        f"3️⃣ Жди, пока кто-то ещё нажмёт\n\n"
         f"📢 Связь: @TeamSearchChannel",
         parse_mode='Markdown',
         reply_markup=main_menu()
@@ -100,7 +100,7 @@ def handle(call):
         if uid in players:
             players[uid]["game"] = game
         bot.answer_callback_query(call.id, f"✅ {game}")
-        bot.edit_message_text(f"✅ **Игра: {game}**\n\nТеперь ищи", chat_id, msg_id, parse_mode='Markdown', reply_markup=main_menu())
+        bot.edit_message_text(f"✅ **Игра: {game}**\n\nТеперь ищи тиммейта", chat_id, msg_id, parse_mode='Markdown', reply_markup=main_menu())
         return
 
     if data == "games":
@@ -146,7 +146,7 @@ def handle(call):
 
             bot.send_message(uid, f"🎉 **НАЙДЕН!**\n\n👤 @{p2['username']}\n🎮 {p1['game']}\n\n💬 https://t.me/{p2['username']}", parse_mode='Markdown', reply_markup=main_menu())
             bot.send_message(partner_id, f"🎉 **НАЙДЕН!**\n\n👤 @{p1['username']}\n🎮 {p2['game']}\n\n💬 https://t.me/{p1['username']}", parse_mode='Markdown', reply_markup=main_menu())
-            bot.edit_message_text("✅ **Найден!**", chat_id, msg_id, reply_markup=main_menu())
+            bot.edit_message_text("✅ **Найден!** Контакты отправлены.", chat_id, msg_id, reply_markup=main_menu())
             bot.answer_callback_query(call.id, "🎉 Найден!")
         else:
             if not players[uid]["looking"]:
@@ -164,7 +164,8 @@ def clean_queue():
             if p["looking"]:
                 p["looking"] = False
         print("🧹 Очистка")
-threading.Thread(target=clean_queue, daemon=True).start()
+
+threading.Thread(target=clean_queue, daemon=True).start()  # ← ИСПОЛЬЗУЕМ threading.Thread
 
 # === ПИНГ ===
 def keep_alive():
@@ -176,9 +177,10 @@ def keep_alive():
         except Exception as e:
             print(f"❌ Ошибка пинга: {e}")
         time.sleep(300)
-threading.Thread(target=keep_alive, daemon=True).start()
 
-# === ПОРТ ДЛЯ RENDER ===
+threading.Thread(target=keep_alive, daemon=True).start()  # ← ИСПОЛЬЗУЕМ threading.Thread
+
+# === ПОРТ ===
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -190,9 +192,9 @@ def run_health_server():
     server = HTTPServer(("0.0.0.0", port), HealthHandler)
     server.serve_forever()
 
-Thread(target=run_health_server, daemon=True).start()
+Thread(target=run_health_server, daemon=True).start()  # ← ТЕПЕРЬ Thread РАБОТАЕТ
 print(f"✅ Health-сервер запущен на порту {os.environ.get('PORT', 10000)}")
 
 # === ЗАПУСК ===
-print("🚀 БОТ ЗАПУЩЕН С ЗАЩИТОЙ ОТ ДВОЙНОГО /start")
+print("🚀 БОТ ЗАПУЩЕН (ПОЛНАЯ ВЕРСИЯ, ИСПРАВЛЕН ИМПОРТ)")
 bot.infinity_polling()
