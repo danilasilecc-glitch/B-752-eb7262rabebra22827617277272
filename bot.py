@@ -169,15 +169,22 @@ threading.Thread(target=clean_queue, daemon=True).start()  # ← ИСПОЛЬЗ�
 
 # === ПИНГ ===
 def keep_alive():
+    import datetime
+    print("🔁 [ПИНГ] Поток запущен и будет работать каждые 5 минут")
     while True:
         try:
-            requests.get("https://www.google.com", timeout=10)
-            requests.get("https://www.cloudflare.com", timeout=10)
-            print("✅ Пинг успешен")
+            # Пробуем оба адреса для надёжности
+            r1 = requests.get("https://www.google.com", timeout=15)
+            r2 = requests.get("https://www.cloudflare.com", timeout=15)
+            if r1.status_code == 200 or r2.status_code == 200:
+                print(f"✅ [ПИНГ] Успешно ({datetime.datetime.now()})")
+            else:
+                print(f"⚠️ [ПИНГ] Ответ не 200, но мы живы")
         except Exception as e:
-            print(f"❌ Ошибка пинга: {e}")
+            # ЛЮБАЯ ошибка будет поймана и записана
+            print(f"❌ [ПИНГ] Ошибка: {type(e).__name__} — {e}")
+        # Ждём ровно 5 минут, даже если была ошибка
         time.sleep(300)
-
 threading.Thread(target=keep_alive, daemon=True).start()  # ← ИСПОЛЬЗУЕМ threading.Thread
 
 # === ПОРТ ===
