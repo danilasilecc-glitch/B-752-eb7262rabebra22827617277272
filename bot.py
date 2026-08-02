@@ -7,7 +7,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from threading import Thread
 
-BOT_TOKEN = "8931098246:AAFmaI36_-djNpBzvGTGl7eqNY_sopup8s0"
+BOT_TOKEN = "8931098246:AAFm5RQYU_662sEKDt95cKWzVyxpZd9xI3c"
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # === ДАННЫЕ ===
